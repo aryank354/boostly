@@ -1,0 +1,43 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+
+# SQLite database
+boostly.db
+*.sqlite
+*.sqlite3
+
+# Coverage
+coverage/
+
+# Cache
+.npm/
+.cache/
+.vscode/
+
+# Temporary files
+*.tmp
+*.swp
+
+# Lock files (optional)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
