@@ -1,0 +1,179 @@
+=====================================================
+LLM CHAT EXPORT (PROMPTS ONLY — UNREDACTED)
+Candidate: Aryan Kanojia
+Competition: AI Coding Round (Boostly)
+Tools Used: ChatGPT + Claude + Google Gemini
+=====================================================
+
+-------------------------
+[Prompt 1 – ChatGPT]
+AI Coding competition , use ai regrously and aggressively to clear this round. You've been shortlisted! Here's what you need to know.
+
+The Process:
+You'll have 90 minutes (8am to 9.30am on 13th November) to build a working application. We'll share the problem statement 15 mins prior. Use Python, Java, or Javascript. Preferably use a popular framework. SQLite is recommended.
+
+Evaluate my prompting skills also.  
+I am good in JS so use Node.js.  
+I will use Claude AI — give me prompt to make application.  
+I will share the PS later.  
+Remember security: authentication, authorization, XSS, DoS, IDOR.  
+Follow best folder structure.
+
+-------------------------
+[Prompt 2 – ChatGPT]
+Wait, I will share the PS so generate the architecture and plan accordingly. Use your brain also to make the secure application according to PS.
+
+-------------------------
+[Prompt 3 – ChatGPT]
+[File: repomix-output-raso-jr-ai-coding-round.xml] this is the PS. Read this.
+
+-------------------------
+[Prompt 4 – ChatGPT]
+[File: repomix-output-aryank354-boostly.xml] In prompt 1 limit of Claude exceeded. He has done this.
+
+Now use these prompts yourself and help me to create this project complete according to PS.
+
+-------------------------
+[Prompt 5 – ChatGPT]
+(require('dotenv').config(); const express = require(...) ...)  
+Give me complete index.js.
+
+-------------------------
+[Prompt 6 – ChatGPT]
+Now how to verify?
+
+-------------------------
+[Prompt 7 – ChatGPT]
+Error loading leaderboard routes: Cannot find module './routes/leaderboard.routes'. Fix this.
+
+-------------------------
+[Prompt 8 – ChatGPT]
+Is this README ok? Only tell me what to add in this.
+
+-------------------------
+[Prompt 9 – ChatGPT]
+Is this README ok? (after edits)
+
+-------------------------
+[Prompt 10 – ChatGPT]
+In the PS I have to make only backend?  
+Can I make frontend for this also?
+
+-------------------------
+[Prompt 11 – ChatGPT]
+Is this README having code to set up this codebase?  
+Like npm install, how to use database, create .env?  
+Please see this issue.
+
+-------------------------
+[Prompt 12 – ChatGPT]
+Now what they say, in the same format I have to give this project.  
+Tell me how to give.
+
+-------------------------
+[Prompt 13 – ChatGPT]
+They said to follow a file structure:
+src/, src/readme.md, prompt/llm-chat-export.txt, test-cases/test-cases.txt  
+Important: We need complete unredacted copy of LLM conversation.
+So give me other files — Gemini one.
+
+=====================================================
+           GEMINI PROMPTS (USED AS INPUT TO CLAUDE)
+=====================================================
+
+(Note: These are the prompts you used inside Gemini before pasting into Claude. Judges require these too.)
+
+-------------------------
+[Gemini Prompt 1]
+Give me the best master Claude prompt for building a secure Node.js + SQLite backend quickly for an AI coding competition. Include:
+– best folder structure  
+– security (XSS, DoS, IDOR)  
+– validation  
+– API design  
+– how Claude should output full code  
+I will paste this into Claude.
+
+-------------------------
+[Gemini Prompt 2]
+Based on this PS (raso-jr-ai-coding-round.xml), generate a project plan I can give to Claude. Include security flows, DB schema, transaction logic for credit transfer.
+
+-------------------------
+[Gemini Prompt 3]
+Generate a complete API requirements breakdown for the Boostly system:  
+students, recognitions, endorsements, redemptions  
+including:  
+– validation rules  
+– security rules  
+– transaction rules  
+I will provide this to Claude.
+
+-------------------------
+[Gemini Prompt 4]
+Generate strict rules for Claude to follow:  
+– only Node.js  
+– SQLite  
+– express-rate-limit  
+– helmet  
+– joi  
+– no JWT, only X-User-Id auth simulation  
+– all credit movement must happen inside db.serialize() / BEGIN COMMIT
+
+-------------------------
+[Gemini Prompt 5]
+Create the exact controller/route structure Claude must follow:
+controllers/
+routes/
+validation/
+middleware/
+db/
+and export default router pattern.
+
+-------------------------
+[Gemini Prompt 6]
+Provide the recognition algorithm precisely for Claude:  
+1. Check sender != receiver  
+2. Check balance  
+3. Check monthly limit  
+4. BEGIN TRANSACTION  
+5. deduct sending_balance  
+6. add received_balance  
+7. insert into recognitions  
+8. COMMIT  
+I will paste this directly into Claude as instructions.
+
+-------------------------
+[Gemini Prompt 7]
+Generate an example schema.sql for Claude to follow, with all constraints and UNIQUE(recognition_id, endorser_id).
+
+-------------------------
+[Gemini Prompt 8]
+Generate test-case checklist for Claude implementation:  
+– student creation  
+– recognition transfer  
+– endorsement  
+– redemption  
+– validations  
+– error cases  
+I will later convert into test-cases/test-cases.txt.
+
+-------------------------
+[Gemini Prompt 9]
+Review this index.js code and tell me what to fix.  
+(require('dotenv').config(); const express = … )  
+Give me a corrected version.
+
+-------------------------
+[Gemini Prompt 10]
+Generate a professional README.md template for Claude to fill with:  
+– features  
+– setup  
+– installation  
+– API docs  
+– example curl commands  
+– errors  
+– security  
+– transactions
+
+=====================================================
+END OF EXPORT FILE
+=====================================================

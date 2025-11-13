@@ -1,0 +1,107 @@
+This document details how to test all features of the Boostly API.
+
+Feature: 1. Students
+
+Test: Create 3 new students (Alice, Bob, Carol)
+Steps:
+
+Send: POST /api/students with {"name": "Alice", "email": "alice@test.com"}
+
+Send: POST /api/students with {"name": "Bob", "email": "bob@test.com"}
+
+Send: POST /api/students with {"name": "Carol", "email": "carol@test.com"}
+Expected Result: 201 Created for each. Note their IDs (should be 1, 2, 3).
+
+Feature: 2. Recognition (Core)
+
+Test: Alice (ID 1) sends 30 credits to Bob (ID 2)
+Steps:
+
+Send: POST /api/recognitions
+Header: 'X-User-Id: 1'
+Body: {"receiver_id": 2, "amount": 30, "message": "Great work!"}
+Expected Result: 201 Created.
+
+Test: Verify balances
+Steps:
+
+Send: GET /api/students/1 (Header: 'X-User-Id: 1')
+
+Send: GET /api/students/2 (Header: 'X-User-Id: 2')
+Expected Result:
+
+Alice's 'sending_balance' is 70 and 'monthly_sending_limit_used' is 30.
+
+Bob's 'received_balance' is 30.
+
+Test: Block self-recognition
+Steps:
+
+Send: POST /api/recognitions (Header: 'X-User-Id: 1', Body: {"receiver_id": 1, "amount": 10})
+Expected Result: 400 Bad Request ("Cannot send recognition to yourself").
+
+Test: Block insufficient balance
+Steps:
+
+Send: POST /api/recognitions (Header: 'X-User-Id: 1', Body: {"receiver_id": 2, "amount": 9999})
+Expected Result: 400 Bad Request ("Insufficient sending balance...").
+
+Feature: 3. Endorsements (Core)
+
+Test: Carol (ID 3) endorses the recognition (ID 1)
+Steps:
+
+Send: POST /api/endorsements (Header: 'X-User-Id: 3', Body: {"recognition_id": 1})
+Expected Result: 201 Created.
+
+Test: Block duplicate endorsement
+Steps:
+
+Send the exact same request again.
+Expected Result: 409 Conflict ("You have already endorsed this recognition").
+
+Feature: 4. Redemption (Core)
+
+Test: Bob (ID 2) redeems 10 credits
+Steps:
+
+Send: POST /api/redemptions (Header: 'X-User-Id: 2', Body: {"credits_redeemed": 10})
+Expected Result: 201 Created.
+
+Test: Verify Bob's new balance
+Steps:
+
+Send: GET /api/students/2 (Header: 'X-User-Id: 2').
+Expected Result: Bob's 'received_balance' is now 20 (30 - 10).
+
+Feature: 5. Leaderboard (Step-Up)
+
+Test: Get the top 3 students
+Steps:
+
+Send: GET /api/leaderboard?limit=3 (Header: 'X-User-Id: 1')
+Expected Result: 200 OK. Bob (ID 2) is at the top with a 'received_balance' of 20.
+
+Feature: 6. Monthly Credit Reset (Step-Up)
+
+Test: Reset credits with carry-over
+Steps:
+
+Check Alice's (ID 1) profile. Her 'sending_balance' is 70.
+
+Check Bob's (ID 2) profile. His 'sending_balance' is 100.
+
+Send: POST /api/admin/reset-credits (no auth, empty body).
+Expected Result: 200 OK.
+
+Test: Verify new balances
+Steps:
+
+Send: GET /api/students/1 (Header: 'X-User-Id: 1').
+
+Send: GET /api/students/2 (Header: 'X-User-Id: 2').
+Expected Result:
+
+Alice's 'sending_balance' is now 150 (100 base + 50 carry-over, since 70 > 50).
+
+Bob's 'sending_balance' is also 150 (100 base + 50 carry-over, since 100 > 50).
