@@ -9,16 +9,13 @@ const resetMonthlyCredits = async (req, res) => {
     try {
         // Carry forward up to 50 unused credits
         // new_balance = 100 (base) + LEAST(50, current_sending_balance)
+        // SQLite doesn't have LEAST(), so we use a CASE statement.
         const query = `
             UPDATE students
             SET 
-                sending_balance = 100 + (SELECT CASE WHEN sending_balance < 50 THEN sending_balance ELSE 50 END),
+                sending_balance = 100 + (CASE WHEN sending_balance < 50 THEN sending_balance ELSE 50 END),
                 monthly_sending_limit_used = 0;
         `;
-
-        // Note: For SQLite, LEAST(a, b) is not built-in, so we use a CASE statement.
-        // If you were on PostgreSQL, you would use:
-        // SET sending_balance = 100 + LEAST(50, sending_balance), ...
 
         const result = await runQuery(query);
 

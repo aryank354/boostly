@@ -54,12 +54,16 @@ boostly/
 │   │   ├── students.controller.js
 │   │   ├── recognitions.controller.js
 │   │   ├── endorsements.controller.js
-│   │   └── redemptions.controller.js
+│   │   ├── redemptions.controller.js
+│   │   ├── leaderboard.controller.js   <-- NEW
+│   │   └── admin.controller.js         <-- NEW
 │   ├── routes/
 │   │   ├── students.routes.js
 │   │   ├── recognitions.routes.js
 │   │   ├── endorsements.routes.js
-│   │   └── redemptions.routes.js
+│   │   ├── redemptions.routes.js
+│   │   ├── leaderboard.routes.js       <-- NEW
+│   │   └── admin.routes.js             <-- NEW
 │   ├── validation/
 │   │   ├── students.validation.js
 │   │   ├── recognitions.validation.js
@@ -535,6 +539,126 @@ All protected endpoints require the `X-User-Id` header to simulate authenticatio
 
 ---
 
+### Leaderboard (Step-Up Challenge)
+
+#### 1. Get Leaderboard
+- **Endpoint**: `GET /api/leaderboard`
+- **Description**: Get student leaderboard ranked by received credits
+- **Authentication**: Required
+- **Query Parameters**:
+  - `limit` (optional): Limit number of results (e.g., `?limit=5` for top 5)
+- **Sorting**: Ranks by `received_balance` (DESC), then `id` (ASC)
+- **Success Response** (200):
+```json
+{
+  "success": true,
+  "count": 3,
+  "data": [
+    {
+      "rank": 1,
+      "id": 2,
+      "name": "Bob Smith",
+      "email": "bob@example.com",
+      "received_balance": 50,
+      "recognitions_received": 3,
+      "total_credits_received": 50
+    },
+    {
+      "rank": 2,
+      "id": 3,
+      "name": "Carol White",
+      "email": "carol@example.com",
+      "received_balance": 30,
+      "recognitions_received": 2,
+      "total_credits_received": 30
+    },
+    {
+      "rank": 3,
+      "id": 1,
+      "name": "Alice Johnson",
+      "email": "alice@example.com",
+      "received_balance": 0,
+      "recognitions_received": 0,
+      "total_credits_received": 0
+    }
+  ]
+}
+```
+
+**Example - Top 5:**
+```bash
+curl -X GET http://localhost:3000/api/leaderboard?limit=5 \
+  -H "X-User-Id: 1"
+```
+
+---
+
+### Admin (Step-Up Challenge)
+
+#### 1. Reset Monthly Credits
+- **Endpoint**: `POST /api/admin/reset-credits`
+- **Description**: Simulates monthly cron job - resets sending limits and carries over unused credits
+- **Authentication**: None (public endpoint for testing)
+- **Business Logic**:
+  - Resets `monthly_sending_limit_used` to 0 for all students
+  - Calculates carry-over: `min(50, 100 - monthly_sending_limit_used)`
+  - Adds carry-over to `sending_balance`
+  - Maximum `sending_balance` after reset: 150 credits
+- **Success Response** (200):
+```json
+{
+  "success": true,
+  "message": "Monthly credit reset completed successfully",
+  "data": {
+    "students_updated": 3,
+    "total_carryover_added": 120,
+    "reset_timestamp": "2025-11-13 08:30:00",
+    "students": [
+      {
+        "id": 1,
+        "name": "Alice Johnson",
+        "previous_sending_balance": 80,
+        "carryover_credits": 20,
+        "new_sending_balance": 100,
+        "previous_limit_used": 20,
+        "new_limit_used": 0
+      },
+      {
+        "id": 2,
+        "name": "Bob Smith",
+        "previous_sending_balance": 100,
+        "carryover_credits": 50,
+        "new_sending_balance": 150,
+        "previous_limit_used": 0,
+        "new_limit_used": 0
+      },
+      {
+        "id": 3,
+        "name": "Carol White",
+        "previous_sending_balance": 50,
+        "carryover_credits": 50,
+        "new_sending_balance": 100,
+        "previous_limit_used": 0,
+        "new_limit_used": 0
+      }
+    ]
+  }
+}
+```
+
+**Example:**
+```bash
+curl -X POST http://localhost:3000/api/admin/reset-credits
+```
+
+**Carry-Over Examples:**
+- Student used 20 credits: Carries over 50 credits (max) → Balance becomes `current + 50`
+- Student used 60 credits: Carries over 40 credits → Balance becomes `current + 40`
+- Student used 100 credits: Carries over 0 credits → Balance stays same
+- Maximum balance after reset: 150 credits (100 base + 50 max carry-over)
+
+---
+
 ## 🧪 Sample Requests & Responses
 
 ### Complete Flow Example
@@ -639,7 +763,37 @@ curl -X POST http://localhost:3000/api/redemptions \
 }
 ```
 
-#### Step 5: View Bob's Profile
+#### Step 5: View Leaderboard
+```bash
+curl -X GET http://localhost:3000/api/leaderboard?limit=5 \
+  -H "X-User-Id: 1"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "count": 3,
+  "data": [
+    {
+      "rank": 1,
+      "id": 2,
+      "name": "Bob Smith",
+      "email": "bob@example.com",
+      "received_balance": 10,
+      "recognitions_received": 1,
+      "total_credits_received": 20
+    }
+  ]
+}
+```
+
+#### Step 6: Admin Resets Monthly Credits
+```bash
+curl -X POST http://localhost:3000/api/admin/reset-credits
+```
+
+#### Step 7: View Bob's Profile
 ```bash
 curl -X GET http://localhost:3000/api/students/2 \
   -H "X-User-Id: 2"
@@ -654,7 +808,7 @@ curl -X GET http://localhost:3000/api/students/2 \
     "name": "Bob Smith",
     "email": "bob@example.com",
     "received_balance": 10,
-    "sending_balance": 100,
+    "sending_balance": 150,
     "monthly_sending_limit_used": 0,
     "remaining_monthly_limit": 100,
     "created_at": "2025-11-13 02:48:52",
@@ -693,6 +847,18 @@ curl -X GET http://localhost:3000/api/students/2 \
 - ✅ Credits are **permanently deducted** from `received_balance`
 - ✅ Can only redeem credits from `received_balance`
 - ✅ Cannot redeem more than available balance
+
+### Monthly Reset (Step-Up Challenge)
+- ✅ Resets `monthly_sending_limit_used` to 0 for all students
+- ✅ **Carry-over logic**: `min(50, 100 - monthly_sending_limit_used)`
+- ✅ Adds carry-over to `sending_balance`
+- ✅ Maximum balance after reset: **150 credits** (100 base + 50 carry-over)
+
+### Leaderboard (Step-Up Challenge)
+- ✅ Ranks students by `received_balance` (DESC)
+- ✅ Ties broken by `id` (ASC)
+- ✅ Shows total recognitions received and total credits received
+- ✅ Optional limit parameter for top N students
 
 ---
 
@@ -790,7 +956,7 @@ const result = await executeTransaction(async () => {
 - Ensures data consistency
 - Automatic rollback on errors
 
-**Redemption** also uses transactions for the same reasons.
+**Redemption** and **Monthly Reset** also use transactions for the same reasons.
 
 ### Security Features
 
@@ -878,8 +1044,8 @@ See `test-cases/test-cases.txt` for detailed testing instructions for each featu
 
 - **Database**: SQLite file (`boostly.db`) is auto-created on first run
 - **Authentication**: Currently simulated with `X-User-Id` header for testing
-- **Monthly Reset**: Not yet implemented (Step-up Challenge #1)
-- **Leaderboard**: Not yet implemented (Step-up Challenge #2)
+- **Monthly Reset**: Implemented as a manual admin endpoint (`/api/admin/reset-credits`) to simulate a cron job
+- **Leaderboard**: Implemented at `/api/leaderboard`
 
 ---
 
@@ -888,11 +1054,11 @@ See `test-cases/test-cases.txt` for detailed testing instructions for each featu
 This is a coding challenge submission. For production use, consider:
 - Implementing JWT authentication
 - Adding comprehensive test suite
-- Implementing monthly credit reset
-- Adding leaderboard feature
-- Using PostgreSQL/MySQL for production
+- Converting admin endpoint to actual cron job
 - Adding API documentation (Swagger/OpenAPI)
+- Using PostgreSQL/MySQL for production
 - Implementing logging and monitoring
+- Adding email notifications for recognitions
 
 ---
 
