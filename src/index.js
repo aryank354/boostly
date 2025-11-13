@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit');
 const { initDb } = require('./db/database');
 
 // Import routes (with error handling for missing files)
-let studentRoutes, recognitionRoutes, endorsementRoutes, redemptionRoutes;
+let studentRoutes, recognitionRoutes, endorsementRoutes, redemptionRoutes, leaderboardRoutes, adminRoutes;
 
 try {
     studentRoutes = require('./routes/students.routes');
@@ -36,6 +36,22 @@ try {
     console.error('Error loading redemptions routes:', err.message);
     process.exit(1);
 }
+
+// --- NEW (Step-Up Challenges) ---
+try {
+    leaderboardRoutes = require('./routes/leaderboard.routes');
+} catch (err) {
+    console.error('Error loading leaderboard routes:', err.message);
+    process.exit(1);
+}
+
+try {
+    adminRoutes = require('./routes/admin.routes');
+} catch (err) {
+    console.error('Error loading admin routes:', err.message);
+    process.exit(1);
+}
+// --- End New ---
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -74,6 +90,12 @@ app.use('/api/students', studentRoutes);
 app.use('/api/recognitions', recognitionRoutes);
 app.use('/api/endorsements', endorsementRoutes);
 app.use('/api/redemptions', redemptionRoutes);
+
+// --- NEW (Step-Up Challenges) ---
+app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/admin', adminRoutes);
+// --- End New ---
+
 
 // 404 handler
 app.use((req, res) => {
