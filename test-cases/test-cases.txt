@@ -1,107 +1,161 @@
-This document details how to test all features of the Boostly API.
+===========================================
+BOOSTLY – TEST CASES (MANUAL VERIFICATION)
+===========================================
 
-Feature: 1. Students
+This document explains how to test every feature of the Boostly backend API.
+Use curl, Postman, or Thunder Client to verify all endpoints.
 
-Test: Create 3 new students (Alice, Bob, Carol)
+-------------------------------------------
+FEATURE 1: STUDENTS
+-------------------------------------------
+
+Test 1: Create 3 new students (Alice, Bob, Carol)
 Steps:
+1. POST /api/students
+   Body: {"name": "Alice", "email": "alice@test.com"}
 
-Send: POST /api/students with {"name": "Alice", "email": "alice@test.com"}
+2. POST /api/students
+   Body: {"name": "Bob", "email": "bob@test.com"}
 
-Send: POST /api/students with {"name": "Bob", "email": "bob@test.com"}
+3. POST /api/students
+   Body: {"name": "Carol", "email": "carol@test.com"}
 
-Send: POST /api/students with {"name": "Carol", "email": "carol@test.com"}
-Expected Result: 201 Created for each. Note their IDs (should be 1, 2, 3).
+Expected Result:
+- 201 Created for each request.
+- Returned IDs should be 1, 2, 3 (in that order).
 
-Feature: 2. Recognition (Core)
 
-Test: Alice (ID 1) sends 30 credits to Bob (ID 2)
+-------------------------------------------
+FEATURE 2: RECOGNITION (CORE TRANSACTION)
+-------------------------------------------
+
+Test 2.1: Alice (ID 1) sends 30 credits to Bob (ID 2)
 Steps:
-
-Send: POST /api/recognitions
-Header: 'X-User-Id: 1'
+POST /api/recognitions
+Headers: X-User-Id: 1
 Body: {"receiver_id": 2, "amount": 30, "message": "Great work!"}
-Expected Result: 201 Created.
 
-Test: Verify balances
-Steps:
-
-Send: GET /api/students/1 (Header: 'X-User-Id: 1')
-
-Send: GET /api/students/2 (Header: 'X-User-Id: 2')
 Expected Result:
+- 201 Created.
+- Recognition is stored.
+- Credits transferred atomically.
 
-Alice's 'sending_balance' is 70 and 'monthly_sending_limit_used' is 30.
-
-Bob's 'received_balance' is 30.
-
-Test: Block self-recognition
+Test 2.2: Verify updated balances
 Steps:
+1. GET /api/students/1   (Header: X-User-Id: 1)
+2. GET /api/students/2   (Header: X-User-Id: 2)
 
-Send: POST /api/recognitions (Header: 'X-User-Id: 1', Body: {"receiver_id": 1, "amount": 10})
-Expected Result: 400 Bad Request ("Cannot send recognition to yourself").
+Expected Result:
+- Alice: sending_balance = 70, monthly_sending_limit_used = 30
+- Bob: received_balance = 30
 
-Test: Block insufficient balance
+Test 2.3: Block self-recognition
 Steps:
+POST /api/recognitions
+Header: X-User-Id: 1
+Body: {"receiver_id": 1, "amount": 10}
 
-Send: POST /api/recognitions (Header: 'X-User-Id: 1', Body: {"receiver_id": 2, "amount": 9999})
-Expected Result: 400 Bad Request ("Insufficient sending balance...").
+Expected:
+- 400 Bad Request
+- Error message: "Cannot send recognition to yourself"
 
-Feature: 3. Endorsements (Core)
-
-Test: Carol (ID 3) endorses the recognition (ID 1)
+Test 2.4: Block insufficient balance
 Steps:
+POST /api/recognitions
+Header: X-User-Id: 1
+Body: {"receiver_id": 2, "amount": 9999}
 
-Send: POST /api/endorsements (Header: 'X-User-Id: 3', Body: {"recognition_id": 1})
-Expected Result: 201 Created.
+Expected:
+- 400 Bad Request
+- Error message about insufficient sending balance.
 
-Test: Block duplicate endorsement
+
+-------------------------------------------
+FEATURE 3: ENDORSEMENTS (CORE)
+-------------------------------------------
+
+Test 3.1: Carol (ID 3) endorses recognition (ID 1)
 Steps:
+POST /api/endorsements
+Header: X-User-Id: 3
+Body: {"recognition_id": 1}
 
+Expected:
+- 201 Created
+
+Test 3.2: Block duplicate endorsement
+Steps:
 Send the exact same request again.
-Expected Result: 409 Conflict ("You have already endorsed this recognition").
 
-Feature: 4. Redemption (Core)
+Expected:
+- 409 Conflict
+- Error: "You have already endorsed this recognition"
 
-Test: Bob (ID 2) redeems 10 credits
+
+-------------------------------------------
+FEATURE 4: REDEMPTION (CORE)
+-------------------------------------------
+
+Test 4.1: Bob redeems 10 credits
 Steps:
+POST /api/redemptions
+Header: X-User-Id: 2
+Body: {"credits_redeemed": 10}
 
-Send: POST /api/redemptions (Header: 'X-User-Id: 2', Body: {"credits_redeemed": 10})
-Expected Result: 201 Created.
+Expected:
+- 201 Created
 
-Test: Verify Bob's new balance
+Test 4.2: Verify Bob's balance
 Steps:
+GET /api/students/2
+Header: X-User-Id: 2
 
-Send: GET /api/students/2 (Header: 'X-User-Id: 2').
-Expected Result: Bob's 'received_balance' is now 20 (30 - 10).
+Expected:
+- Bob’s received_balance = 20  (30 - 10)
 
-Feature: 5. Leaderboard (Step-Up)
 
-Test: Get the top 3 students
+-------------------------------------------
+FEATURE 5: LEADERBOARD (STEP-UP FEATURE)
+-------------------------------------------
+
+Test 5.1: Fetch top 3 students
 Steps:
+GET /api/leaderboard?limit=3
+Header: X-User-Id: 1
 
-Send: GET /api/leaderboard?limit=3 (Header: 'X-User-Id: 1')
-Expected Result: 200 OK. Bob (ID 2) is at the top with a 'received_balance' of 20.
+Expected:
+- 200 OK
+- Bob (ID 2) should be first because he has the highest received_balance (20)
 
-Feature: 6. Monthly Credit Reset (Step-Up)
 
-Test: Reset credits with carry-over
+-------------------------------------------
+FEATURE 6: MONTHLY CREDIT RESET (STEP-UP FEATURE)
+-------------------------------------------
+
+Current known state before reset:
+- Alice sending_balance = 70
+- Bob sending_balance = 100
+
+Test 6.1: Trigger monthly reset
 Steps:
+POST /api/admin/reset-credits
+(no auth, empty body)
 
-Check Alice's (ID 1) profile. Her 'sending_balance' is 70.
+Expected:
+- 200 OK
 
-Check Bob's (ID 2) profile. His 'sending_balance' is 100.
-
-Send: POST /api/admin/reset-credits (no auth, empty body).
-Expected Result: 200 OK.
-
-Test: Verify new balances
+Test 6.2: Verify updated balances after reset
 Steps:
+1. GET /api/students/1   (X-User-Id: 1)
+2. GET /api/students/2   (X-User-Id: 2)
 
-Send: GET /api/students/1 (Header: 'X-User-Id: 1').
+Expected:
+Reset rule: base = 100, carry-over capped at 50.
 
-Send: GET /api/students/2 (Header: 'X-User-Id: 2').
-Expected Result:
+So after reset:
+- Alice sending_balance = 100 + 50 = 150  (because she had 70 → carry-over = 50 max)
+- Bob sending_balance = 100 + 50 = 150    (because he had 100 → carry-over = 50 max)
 
-Alice's 'sending_balance' is now 150 (100 base + 50 carry-over, since 70 > 50).
-
-Bob's 'sending_balance' is also 150 (100 base + 50 carry-over, since 100 > 50).
+-------------------------------------------
+END OF TEST CASE FILE
+-------------------------------------------
